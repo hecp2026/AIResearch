@@ -1,0 +1,696 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="海外电商导购网站流量采购、Amazon Associates CPS接入、关键词选择与数据归因运营手册。">
+  <title>海外电商导购网站流量与联盟运营手册</title>
+  <style>
+    :root {
+      --ink: #17202a;
+      --muted: #5d6d7e;
+      --line: #d8dee7;
+      --paper: #fbfcfe;
+      --white: #ffffff;
+      --band: #eef5f1;
+      --soft: #f6f0e8;
+      --accent: #1f7a5b;
+      --blue: #315f8c;
+      --orange: #b85c38;
+      --red: #a33b34;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", Arial, sans-serif;
+      line-height: 1.72;
+    }
+
+    a { color: var(--blue); }
+
+    .page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 40px 28px 72px;
+    }
+
+    header {
+      padding: 50px 0 34px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    h1 {
+      max-width: 920px;
+      margin: 0;
+      color: #2563eb;
+      font-size: clamp(30px, 4.4vw, 48px);
+      line-height: 1.14;
+    }
+
+    .subtitle {
+      max-width: 920px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 18px;
+    }
+
+    .meta,
+    .grid,
+    .numbers,
+    .check-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .meta {
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 32px;
+    }
+
+    .meta div,
+    .card,
+    .metric,
+    .check-item {
+      padding: 17px 18px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 9px;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .value { font-weight: 700; }
+
+    nav {
+      margin-top: 28px;
+      padding: 17px 19px;
+      background: var(--band);
+      border-radius: 9px;
+    }
+
+    nav a {
+      display: inline-block;
+      margin: 4px 18px 4px 0;
+      color: var(--accent);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    section {
+      padding: 34px 0 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 28px;
+      line-height: 1.3;
+    }
+
+    h3 {
+      margin: 24px 0 10px;
+      font-size: 20px;
+      line-height: 1.4;
+    }
+
+    p { margin: 10px 0; }
+
+    .lead {
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .grid {
+      grid-template-columns: repeat(3, 1fr);
+      margin: 18px 0;
+    }
+
+    .grid.two { grid-template-columns: repeat(2, 1fr); }
+
+    .card h3 { margin-top: 0; }
+
+    .pill {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 3px 9px;
+      color: var(--white);
+      background: var(--blue);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.green { background: var(--accent); }
+    .pill.orange { background: var(--orange); }
+    .pill.red { background: var(--red); }
+
+    ul,
+    ol {
+      margin: 10px 0;
+      padding-left: 23px;
+    }
+
+    li { margin: 6px 0; }
+
+    table {
+      width: 100%;
+      margin: 18px 0 24px;
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      background: #edf3f7;
+      font-weight: 700;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .numbers {
+      grid-template-columns: repeat(4, 1fr);
+      margin: 20px 0;
+    }
+
+    .metric strong {
+      display: block;
+      color: var(--accent);
+      font-size: 25px;
+      line-height: 1.25;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .flow,
+    .formula,
+    .note,
+    .warning {
+      margin: 18px 0;
+      padding: 17px 19px;
+      border-radius: 8px;
+    }
+
+    .flow {
+      color: #1d3950;
+      background: #edf6fb;
+      border-left: 5px solid var(--blue);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .formula {
+      background: var(--soft);
+      border-left: 5px solid var(--orange);
+      font-weight: 700;
+    }
+
+    .note {
+      color: #35495e;
+      background: #f2f6fb;
+      border: 1px solid #d8e6f4;
+    }
+
+    .warning {
+      color: #6a302b;
+      background: #fff2ef;
+      border: 1px solid #efcbc5;
+    }
+
+    code,
+    pre {
+      font-family: Consolas, "Courier New", monospace;
+    }
+
+    code {
+      padding: 1px 5px;
+      background: #edf1f5;
+      border-radius: 4px;
+    }
+
+    pre {
+      overflow-x: auto;
+      padding: 16px 18px;
+      color: #f4f7fb;
+      background: #1e2936;
+      border-radius: 8px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    .check-grid {
+      grid-template-columns: repeat(2, 1fr);
+      margin: 18px 0;
+    }
+
+    .check-item strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--accent);
+    }
+
+    .source-list a { word-break: break-word; }
+
+    footer {
+      padding: 28px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 880px) {
+      .page { padding: 24px 18px 52px; }
+
+      .meta,
+      .grid,
+      .grid.two,
+      .numbers,
+      .check-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { max-width: none; padding: 0; }
+      nav { display: none; }
+      a { color: inherit; text-decoration: none; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <p class="eyebrow">海外获客 · CPS 联盟 · 关键词运营</p>
+      <h1>海外电商导购网站流量与联盟运营手册</h1>
+      <p class="subtitle">适用于展示、评测和比较产品，并将用户引导至 Amazon、eBay、品牌官网等下游电商完成交易的网站。目标是同时打通付费搜索流量、联盟追踪、佣金结算和关键词优化闭环。</p>
+
+      <div class="meta">
+        <div><span class="label">站点模式</span><span class="value">原创导购内容 → 下游电商</span></div>
+        <div><span class="label">主要流量</span><span class="value">Google、Microsoft、本地搜索</span></div>
+        <div><span class="label">主要变现</span><span class="value">CPS 销售佣金</span></div>
+        <div><span class="label">核心市场</span><span class="value">美国、欧洲、日韩等</span></div>
+      </div>
+
+      <nav aria-label="页面目录">
+        <a href="#summary">业务闭环</a>
+        <a href="#traffic">流量渠道</a>
+        <a href="#site">站点合规</a>
+        <a href="#amazon">Amazon CPS</a>
+        <a href="#keywords">关键词策略</a>
+        <a href="#economics">经济模型</a>
+        <a href="#tracking">数据归因</a>
+        <a href="#execution">执行计划</a>
+      </nav>
+    </header>
+
+    <section id="summary">
+      <h2>一、业务闭环与两种身份</h2>
+      <div class="flow">海外搜索广告 / SEO → 原创产品评测与比较页 → 用户主动点击联盟链接 → Amazon 或其他电商成交 → CPS 佣金 → 按关键词复盘</div>
+
+      <div class="grid two">
+        <div class="card">
+          <span class="pill green">联盟推广者</span>
+          <h3>赚取下游电商佣金</h3>
+          <p>广告必须先进入自己的网站，再由用户主动点击合规的 Special Link 进入 Amazon。不能把付费搜索广告直接或自动重定向到 Amazon，也不能竞价购买 Amazon、Kindle 等 Amazon 商标词。</p>
+        </div>
+        <div class="card">
+          <span class="pill">品牌方 / 卖家</span>
+          <h3>用商品毛利润核算投放</h3>
+          <p>除内容站外，还可以使用 Amazon Attribution 衡量站外广告对 Amazon 商品详情页、加购和销售的贡献。Amazon Attribution 标签不能与 Amazon Associates 联盟链接混用。</p>
+        </div>
+      </div>
+
+      <div class="warning"><strong>重要：</strong>如果页面只有商品图片、简短介绍和“Buy on Amazon”按钮，Google 可能按“原创内容不足”或纯跳转页拒登；Amazon 也要求联盟网站提供有实际价值的原创内容。</div>
+    </section>
+
+    <section id="traffic">
+      <h2>二、中国大陆以外的流量采购渠道</h2>
+      <p class="lead">全球市场先使用 Google Ads 和 Microsoft Advertising，再根据目标国家增加当地搜索平台。初期只购买搜索流量，关闭展示联盟和自动扩量，便于判断真实搜索意图。</p>
+
+      <table>
+        <thead>
+          <tr><th>渠道</th><th>重点市场</th><th>计费与入口</th><th>使用建议</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Google Ads Search</td>
+            <td>欧美、东南亚、中东、拉美、日韩</td>
+            <td>CPC 竞价；无最低消费承诺。<a href="https://ads.google.com/">开户注册</a> · <a href="https://support.google.com/google-ads/gethelp">官方客服</a></td>
+            <td>首选渠道。按国家、语言、品类分别建系列，初期只使用精确和词组匹配。</td>
+          </tr>
+          <tr>
+            <td>Microsoft Advertising</td>
+            <td>美国、英国、加拿大、澳大利亚、欧洲</td>
+            <td>搜索广告主要按 CPC。<a href="https://ads.microsoft.com/">开户注册</a> · <a href="https://about.ads.microsoft.com/en/get-started/contact-expert">联系专家</a></td>
+            <td>适合 PC、B2B 和中高年龄用户，可导入 Google 系列；建议关闭 Audience Network 后单独验证。</td>
+          </tr>
+          <tr>
+            <td>Yahoo! JAPAN Ads</td>
+            <td>日本</td>
+            <td>按点击付费；关键词出价可设 1–80,000 日元，账户预充值最低 3,000 日元。<a href="https://business.yahoo.co.jp/advertisement/index.html">官方入口</a></td>
+            <td>需要高质量日语页面，适合导向 Amazon.co.jp 或日本本地商城。</td>
+          </tr>
+          <tr>
+            <td>NAVER Ads</td>
+            <td>韩国</td>
+            <td>CPC 竞价。<a href="https://ads.naver.com/">广告主中心</a>；客服电话 1588-5896 / 080-500-5896。</td>
+            <td>需要韩语内容和本地化选购逻辑，不建议用英文页面直接承接。</td>
+          </tr>
+          <tr>
+            <td>Yandex Direct</td>
+            <td>哈萨克斯坦、白俄罗斯及部分俄语市场</td>
+            <td>搜索以 CPC 为主。<a href="https://direct.yandex.com/">官方入口</a> · <a href="https://yandex.com/support/direct/en/troubleshooting/other">客服</a></td>
+            <td>投放俄语市场前确认当地支付、制裁、商品和行业合规。</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>首轮预算组合</h3>
+      <table>
+        <thead><tr><th>市场</th><th>建议渠道占比</th><th>测试预算</th></tr></thead>
+        <tbody>
+          <tr><td>美国、加拿大、英国、澳大利亚</td><td>Google 70% + Microsoft 30%</td><td>Google 20–50 美元/天；Microsoft 10–20 美元/天</td></tr>
+          <tr><td>欧盟主要国家</td><td>Google 75% + Microsoft 25%</td><td>每个国家单独建立预算和本地语言页面</td></tr>
+          <tr><td>日本</td><td>Google 55% + Yahoo Japan 35% + Microsoft 10%</td><td>Yahoo Japan 可从 5,000–20,000 日元/天测试</td></tr>
+          <tr><td>韩国</td><td>NAVER 50% + Google 40% + Microsoft 10%</td><td>NAVER 可从 50,000–200,000 韩元/天测试</td></tr>
+        </tbody>
+      </table>
+      <div class="note">以上为经营测试建议，不是平台最低消费。联盟佣金模式的可承受 CPC 通常非常低，投放前必须先完成第六节的倒算。</div>
+    </section>
+
+    <section id="site">
+      <h2>三、导购站点的合规与内容标准</h2>
+      <p class="lead">站点必须在“不点击任何电商按钮”的情况下仍能为用户提供独立价值，不能只是流量中转工具。</p>
+
+      <div class="check-grid">
+        <div class="check-item"><strong>原创决策信息</strong>实际评测方法、适用人群、不适用人群、优缺点、兼容性、参数解释和竞品差异。</div>
+        <div class="check-item"><strong>比较功能</strong>同类产品对比表、筛选维度、使用场景和价格区间，不照搬电商商品描述。</div>
+        <div class="check-item"><strong>可信主体</strong>About、Contact、作者资料、编辑标准、内容更新时间、隐私政策和服务条款。</div>
+        <div class="check-item"><strong>清晰跳转</strong>按钮写明“View current price on Amazon”等真实动作，不伪装本站可直接结账。</div>
+        <div class="check-item"><strong>技术可访问</strong>页面对 AdsBot 和普通用户一致，全球可访问，无登录墙、自动跳转、弹窗遮挡或 Cloaking。</div>
+        <div class="check-item"><strong>本地化</strong>使用目标市场语言、货币、单位、物流和使用场景，不只是机器直译。</div>
+      </div>
+
+      <div class="warning">禁止自动 301/302 跳转、iframe 嵌入 Amazon、虚假倒计时、未经验证的折扣、过期价格，以及向审核机器人展示不同页面。</div>
+    </section>
+
+    <section id="amazon">
+      <h2>四、Amazon Associates CPS 接入流程</h2>
+      <p class="lead">Amazon Associates 通常采用在线自助申请，不需要先联系销售签约。应按用户最终购物的 Amazon 商城分别注册账户。</p>
+
+      <h3>4.1 各市场申请入口</h3>
+      <table>
+        <thead><tr><th>市场</th><th>官方申请入口</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>美国</td><td><a href="https://affiliate-program.amazon.com/">affiliate-program.amazon.com</a></td><td>适合 Amazon.com 流量，是 OneLink 的主要账户入口。</td></tr>
+          <tr><td>英国</td><td><a href="https://affiliate-program.amazon.co.uk/">affiliate-program.amazon.co.uk</a></td><td>Amazon UK 独立账户与 Tracking ID。</td></tr>
+          <tr><td>德国</td><td><a href="https://partnernet.amazon.de/">partnernet.amazon.de</a></td><td>Amazon Germany PartnerNet。</td></tr>
+          <tr><td>法国</td><td><a href="https://partenaires.amazon.fr/">partenaires.amazon.fr</a></td><td>Amazon France 独立申请。</td></tr>
+          <tr><td>意大利</td><td><a href="https://programma-affiliazione.amazon.it/">programma-affiliazione.amazon.it</a></td><td>Amazon Italy 独立申请。</td></tr>
+          <tr><td>西班牙</td><td><a href="https://afiliados.amazon.es/">afiliados.amazon.es</a></td><td>Amazon Spain 独立申请。</td></tr>
+          <tr><td>日本</td><td><a href="https://affiliate.amazon.co.jp/">affiliate.amazon.co.jp</a></td><td>适合日语内容和 Amazon.co.jp。</td></tr>
+          <tr><td>加拿大</td><td><a href="https://associates.amazon.ca/">associates.amazon.ca</a></td><td>Amazon Canada 独立账户。</td></tr>
+          <tr><td>印度 / 新加坡 / 阿联酋</td><td><a href="https://affiliate-program.amazon.in/">印度</a> · <a href="https://associates.amazon.sg/">新加坡</a> · <a href="https://associates.amazon.ae/">阿联酋</a></td><td>根据目标用户分别申请。</td></tr>
+        </tbody>
+      </table>
+
+      <h3>4.2 申请前准备</h3>
+      <ol>
+        <li>网站公开上线，并确保域名归申请人或申请公司控制。</li>
+        <li>准备至少 10 篇有实际价值的原创文章或产品页面；保持最近 60 天内有更新。</li>
+        <li>完善 About、Contact、Privacy Policy、Terms 和联盟披露。</li>
+        <li>准备收款人、地址、电话、网站 URL、流量来源、内容类别、收款账户和税务信息。</li>
+        <li>如为非美国个人或企业，根据真实主体完成税务问卷；涉及 W-8BEN / W-8BEN-E 时应由税务顾问确认。</li>
+      </ol>
+
+      <h3>4.3 审核、链接与国际化</h3>
+      <ol>
+        <li>注册后创建渠道级 Tracking ID，例如 <code>site-us-google-20</code>、<code>site-us-bing-20</code>、<code>site-us-seo-20</code>。</li>
+        <li>通过 SiteStripe 或 Amazon 官方链接工具生成 Special Link，禁止自行破坏或隐藏追踪参数。</li>
+        <li>申请后 180 天内带来至少 3 笔合格销售，Amazon 才会完成网站审核；自己的订单不计。</li>
+        <li>分别申请目标国家账户，再使用 <a href="https://affiliate-program.amazon.com/help/node/topic/G8JHEWQ9GTDUN7EH">OneLink</a> 映射当地 Store ID。</li>
+        <li>Tracking ID 可以按国家、渠道、页面或按钮划分，但不能动态绑定到具体个人。</li>
+      </ol>
+
+      <h3>4.4 佣金、Session 与付款</h3>
+      <div class="numbers">
+        <div class="metric"><strong>24 小时</strong><span>标准联盟 Session 窗口</span></div>
+        <div class="metric"><strong>3 笔</strong><span>触发网站审核所需合格销售</span></div>
+        <div class="metric"><strong>180 天</strong><span>申请后的销售验证期限</span></div>
+        <div class="metric"><strong>约 60 天</strong><span>月末至佣金支付周期</span></div>
+      </div>
+      <ul>
+        <li>不同品类、国家的佣金率不同，以对应 Associates Central 的当期 Commission Schedule 为准。</li>
+        <li>用户在标准 Session 内加入购物车，并在规则期限内完成购买，可能形成合格佣金；取消、退货、退款不计。</li>
+        <li>美国账户目前银行转账和礼品卡最低 10 美元；支票最低 100 美元，可能收取处理费。</li>
+        <li>收款前必须完成税务信息，实际支持的银行国家、币种和费用以账户后台为准。</li>
+      </ul>
+
+      <h3>4.5 联盟披露与客服</h3>
+      <p>网站需要在显著位置表明联盟身份。美国计划要求的标准表述为：</p>
+      <pre>As an Amazon Associate I earn from qualifying purchases.</pre>
+      <p>联盟链接附近也应以用户能注意到的方式说明可能获得佣金。开户后可通过 <a href="https://affiliate-program.amazon.com/home/contact">Amazon Associates Customer Service</a> 联系客服，并提供 Associate ID、注册邮箱、网站 URL、收款人名称和问题截图。</p>
+
+      <h3>4.6 其他下游联盟</h3>
+      <table>
+        <thead><tr><th>联盟</th><th>用途</th><th>入口与限制</th></tr></thead>
+        <tbody>
+          <tr><td>Awin</td><td>接入欧美品牌官网和零售商，补充 Amazon 之外的库存与佣金。</td><td><a href="https://www.awin.com/gb/pricing/affiliate-partners">Publisher 入口</a>，入网后逐个申请广告主计划。</td></tr>
+          <tr><td>impact.com</td><td>品牌直营联盟、SaaS、零售和合作伙伴项目。</td><td><a href="https://help.impact.com/partner/what-would-you-like-to-learn-about/getting-started/readme/im-a-partner/step-1-join-the-marketplace">Partner Marketplace</a>，完成资料后申请品牌。</td></tr>
+          <tr><td>eBay Partner Network</td><td>电子产品、收藏品、翻新和长尾商品。</td><td><a href="https://partnernetwork.ebay.com/">官方入口</a>，佣金和归因以目标国家计划为准。</td></tr>
+          <tr><td>Walmart Creator</td><td>美国零售商品。</td><td><a href="https://creator.walmart.com/">官方入口</a>；目前要求申请人居住美国、至少 18 岁、连接公开社交账户且满足粉丝和美国银行账户要求。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="keywords">
+      <h2>五、关键词选择与广告结构</h2>
+      <p class="lead">优先选择能够说明用户正在比较、筛选或准备购买的长尾词。宽泛品类词流量大，但通常无法由联盟佣金覆盖 CPC。</p>
+
+      <table>
+        <thead><tr><th>层级</th><th>搜索意图</th><th>关键词模板</th><th>优先级</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>A</td><td>明确购买与选购</td>
+            <td><code>best [product] for [use case]</code><br><code>best [product] under [price]</code><br><code>best budget [product]</code><br><code>[product] buying guide</code></td>
+            <td>最高</td>
+          </tr>
+          <tr>
+            <td>A</td><td>比较和决策</td>
+            <td><code>[product A] vs [product B]</code><br><code>[product] alternatives</code><br><code>is [product] worth it</code><br><code>[product] pros and cons</code></td>
+            <td>最高</td>
+          </tr>
+          <tr>
+            <td>B</td><td>具体型号研究</td>
+            <td><code>[brand model] review</code><br><code>[model] compatibility</code><br><code>[model] battery life</code><br><code>[model] dimensions</code></td>
+            <td>高</td>
+          </tr>
+          <tr>
+            <td>C</td><td>问题解决</td>
+            <td><code>how to choose [product]</code><br><code>what size [product] do I need</code><br><code>[product] for [problem]</code></td>
+            <td>适合 SEO，付费谨慎测试</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>示例：便携显示器</h3>
+      <pre>best portable monitor for macbook
+best portable monitor under 200
+portable monitor for business travel
+15 inch portable monitor comparison
+model A vs model B
+model A review
+portable monitor for steam deck</pre>
+
+      <h3>否定关键词</h3>
+      <div class="grid two">
+        <div class="card">
+          <span class="pill red">Amazon 商标词</span>
+          <p><code>amazon</code>、<code>amzon</code>、<code>ammazon</code>、<code>kindle</code>、<code>prime</code>、<code>audible</code> 及其他 Amazon 商标、变体和误拼。应结合官方非穷举商标表持续补充。</p>
+        </div>
+        <div class="card">
+          <span class="pill orange">低购买意图词</span>
+          <p><code>free</code>、<code>manual pdf</code>、<code>repair</code>、<code>customer service</code>、<code>login</code>、<code>jobs</code>、<code>definition</code>、<code>torrent</code>、<code>download</code>、<code>wholesale</code> 等，按品类调整。</p>
+        </div>
+      </div>
+
+      <h3>关键词评分</h3>
+      <table>
+        <thead><tr><th>维度</th><th>1–5 分判断标准</th></tr></thead>
+        <tbody>
+          <tr><td>购买意图</td><td>用户是否明确在选商品，而不是只查询概念或售后。</td></tr>
+          <tr><td>页面匹配度</td><td>是否存在完全对应、内容充分的原创落地页。</td></tr>
+          <tr><td>佣金潜力</td><td>客单价 × 佣金率是否能覆盖流量成本。</td></tr>
+          <tr><td>竞争成本</td><td>关键词规划工具预计 CPC 是否低于最高可承受 CPC。</td></tr>
+        </tbody>
+      </table>
+      <p>优先测试总分 15 分以上的词。每个广告组只包含同一购买意图的 5–15 个关键词，每个页面对应一个紧密主题。</p>
+    </section>
+
+    <section id="economics">
+      <h2>六、CPC 与盈利倒算</h2>
+      <p class="lead">联盟模式有“广告点击 → 内容页 → 电商点击 → 电商成交”两次转化，最高可承受 CPC 往往远低于普通自营电商。</p>
+
+      <div class="formula">联盟最高 CPC = 商品客单价 × 联盟佣金率 × 网站到电商点击率 × 电商成交率 × 可接受广告成本比例</div>
+      <p>示例：</p>
+      <pre>客单价：100 美元
+佣金率：3%
+网站到 Amazon 点击率：35%
+Amazon 成交率：12%
+允许使用佣金的 70% 购买流量
+
+最高 CPC = 100 × 3% × 35% × 12% × 70% = 0.0882 美元</pre>
+
+      <div class="warning">如果关键词实际 CPC 为 1 美元，而模型只能承受 0.09 美元，继续购买流量只会扩大亏损。此时应转向长尾 SEO、更高客单商品、更高佣金品牌官网联盟，或自有品牌商品。</div>
+
+      <div class="formula">自有 Amazon 商品最高 CPC = 单件毛利润 × 网站到 Amazon 点击率 × Amazon 成交率 × 可接受广告成本比例</div>
+      <p>自有卖家应使用商品毛利润而不是联盟佣金计算，因此通常能承受更高 CPC；同时使用 Amazon Attribution核对站外广告产生的详情页访问、加购和销售。</p>
+    </section>
+
+    <section id="tracking">
+      <h2>七、数据追踪与归因结构</h2>
+      <p class="lead">网站端记录行为，联盟平台确认成交。不要只看点击率，应持续计算每个国家、页面和关键词的 EPC、佣金和净收益。</p>
+
+      <h3>站内事件</h3>
+      <pre>view_product
+view_comparison
+click_amazon
+click_ebay
+click_brand_store
+affiliate_disclosure_view</pre>
+
+      <h3>UTM 结构</h3>
+      <pre>utm_source=google
+utm_medium=cpc
+utm_campaign=portable_monitor_us
+utm_content=model_a_review</pre>
+
+      <h3>建议报表字段</h3>
+      <table>
+        <thead><tr><th>层级</th><th>核心指标</th><th>优化动作</th></tr></thead>
+        <tbody>
+          <tr><td>广告平台</td><td>搜索词、点击、CPC、站内有效访问</td><td>否定无效词，暂停高成本低意图词。</td></tr>
+          <tr><td>内容页</td><td>停留、滚动、比较表使用、Amazon 出站率</td><td>优化页面结构、比较维度、按钮位置和产品匹配。</td></tr>
+          <tr><td>联盟平台</td><td>点击、下单、发货、佣金、退货</td><td>比较不同商家 EPC，将流量分配给高收益出口。</td></tr>
+          <tr><td>经营层</td><td>收入、广告费、内容成本、净利润</td><td>按国家、品类、页面和关键词计算真实 ROI。</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note">Amazon Associates 不应被当作用户级跟踪系统。Tracking ID 可区分国家、渠道或页面，但不能用于识别具体个人，也不要把用户标识动态写入 sub-tag。</div>
+    </section>
+
+    <section id="execution">
+      <h2>八、30 天执行计划</h2>
+      <div class="grid">
+        <div class="card">
+          <span class="pill green">第 1 周</span>
+          <h3>准备站点与账户</h3>
+          <ul>
+            <li>确定一个目标国家和一个产品细分。</li>
+            <li>完善至少 10 篇原创内容及合规页面。</li>
+            <li>申请对应 Amazon Associates 账户。</li>
+            <li>安装 Analytics 和出站点击事件。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="pill">第 2 周</span>
+          <h3>建立关键词与链接</h3>
+          <ul>
+            <li>筛选 30–50 个高意图长尾词。</li>
+            <li>建立 Amazon 商标和低意图否定词库。</li>
+            <li>创建渠道级 Tracking ID 和联盟链接。</li>
+            <li>逐页核对商品、按钮和披露。</li>
+          </ul>
+        </div>
+        <div class="card">
+          <span class="pill orange">第 3–4 周</span>
+          <h3>小预算验证</h3>
+          <ul>
+            <li>Google 20–50 美元/天，Microsoft 10–20 美元/天。</li>
+            <li>只用精确与词组匹配，关闭自动扩量。</li>
+            <li>每天检查搜索词和出站点击率。</li>
+            <li>达到 100–150 个有效访问后评估页面。</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>继续、修改与停止标准</h3>
+      <table>
+        <thead><tr><th>观察结果</th><th>处理方式</th></tr></thead>
+        <tbody>
+          <tr><td>Amazon 出站率低于约 15%</td><td>先修改内容、比较表和产品匹配，不增加广告预算。</td></tr>
+          <tr><td>出站率高但无成交</td><td>检查商品库存、价格、评论、落地国家、链接与下游页面一致性。</td></tr>
+          <tr><td>有成交但佣金无法覆盖广告费</td><td>暂停高 CPC 词，换更高客单价、高佣金商家或转向 SEO。</td></tr>
+          <tr><td>连续达到目标利润率</td><td>按 20%–30% 的幅度逐步加预算，不一次性翻倍。</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>九、上线前检查清单</h2>
+      <div class="check-grid">
+        <div class="check-item"><strong>账户</strong>目标国家 Amazon Associates 已申请，网站 URL 和流量来源填写准确。</div>
+        <div class="check-item"><strong>内容</strong>每个广告落地页包含原创比较、分析和选择建议。</div>
+        <div class="check-item"><strong>链接</strong>Special Link 与目标国家、商品和 Tracking ID 对应，无自动跳转。</div>
+        <div class="check-item"><strong>披露</strong>联盟身份声明和链接附近的广告关系说明清晰可见。</div>
+        <div class="check-item"><strong>关键词</strong>Amazon 商标词与误拼已加入否定关键词。</div>
+        <div class="check-item"><strong>成本</strong>已按佣金、出站率和成交率计算最高 CPC。</div>
+        <div class="check-item"><strong>追踪</strong>广告 UTM、站内出站事件和联盟 Tracking ID 均已测试。</div>
+        <div class="check-item"><strong>合规</strong>隐私、Cookie、税务和目标国家行业要求已按实际情况处理。</div>
+      </div>
+    </section>
+
+    <section>
+      <h2>十、官方规则与联系方式</h2>
+      <ul class="source-list">
+        <li>Google Ads 原创内容与跳转页政策：<a href="https://support.google.com/adspolicy/answer/16427718?hl=en">https://support.google.com/adspolicy/answer/16427718?hl=en</a></li>
+        <li>Amazon Associates 当前计划政策：<a href="https://affiliate-program.amazon.com/help/operating/policies">https://affiliate-program.amazon.com/help/operating/policies</a></li>
+        <li>Amazon Associates 审核流程：<a href="https://affiliate-program.amazon.com/help/node/topic/G8TW5AE9XL2VX9VM">https://affiliate-program.amazon.com/help/node/topic/G8TW5AE9XL2VX9VM</a></li>
+        <li>Amazon Associates 运营协议与披露：<a href="https://affiliate-program.amazon.com/help/operating/agreement/">https://affiliate-program.amazon.com/help/operating/agreement/</a></li>
+        <li>Amazon Associates 客服表单：<a href="https://affiliate-program.amazon.com/home/contact">https://affiliate-program.amazon.com/home/contact</a></li>
+        <li>Amazon OneLink：<a href="https://affiliate-program.amazon.com/help/node/topic/G8JHEWQ9GTDUN7EH">https://affiliate-program.amazon.com/help/node/topic/G8JHEWQ9GTDUN7EH</a></li>
+        <li>Amazon Attribution：<a href="https://advertising.amazon.com/en-gb/library/guides/basics-of-amazon-attribution">https://advertising.amazon.com/en-gb/library/guides/basics-of-amazon-attribution</a></li>
+        <li>Microsoft Advertising 联系专家：<a href="https://about.ads.microsoft.com/en/get-started/contact-expert">https://about.ads.microsoft.com/en/get-started/contact-expert</a></li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>更新日期：2026 年 7 月 16 日。联盟佣金、广告政策、市场准入和支付方式可能变化，正式投放前应再次核对目标国家的最新官方规则。预算示例用于运营测算，不构成收益保证、法律或税务意见。</p>
+    </footer>
+  </div>
+</body>
+</html>
