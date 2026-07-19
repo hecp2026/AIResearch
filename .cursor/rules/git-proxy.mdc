@@ -1,0 +1,43 @@
+---
+description: Git 远程同步代理配置（fetch/push/pull 时使用，按需 @ 引用）
+alwaysApply: false
+---
+
+# Git 远程同步代理
+
+同步远程仓库（fetch / pull / push / clone）时，按需加载本规则并使用本地 HTTP 代理。
+
+## 代理地址
+
+| 配置项 | 值 |
+|--------|-----|
+| HTTP 代理 | `http://127.0.0.1:1011` |
+| HTTPS 代理 | `http://127.0.0.1:1011` |
+
+## 执行远程操作前
+
+在执行 `git fetch`、`git pull`、`git push`、`git clone` 等访问远程仓库的命令**之前**，先确认本仓库已配置代理；若未配置则写入：
+
+```powershell
+git config --local http.proxy http://127.0.0.1:1011
+git config --local https.proxy http://127.0.0.1:1011
+```
+
+仅使用 `--local`，不要修改 global git config。
+
+## 连接失败时
+
+1. 确认本地代理服务已启动（端口 1011）
+2. 重试远程命令
+3. 若仍失败，可临时设置环境变量后再执行：
+
+```powershell
+$env:HTTP_PROXY="http://127.0.0.1:1011"
+$env:HTTPS_PROXY="http://127.0.0.1:1011"
+git push origin main
+```
+
+## 注意事项
+
+- 代理仅用于访问远程仓库，不影响本地 commit、branch、merge 等操作
+- 本仓库远程地址：`https://github.com/hecp2026/AIResearch.git`
