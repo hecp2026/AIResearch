@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="用 LangGraph 1.x 编写 Agent 的方法与完整流程，配套可运行的代码工程 Agent 示例（自定义状态、会写状态的工具、人工审批、检查点、测试）">
+  <title>用 LangGraph 编写 Agent：方法、完整流程与可运行的代码 Agent</title>
+  <style>
+    :root{
+      --ink:#131a2b;--muted:#5c6784;--paper:#eef1f8;--card:#ffffff;
+      --line:#dde2ef;--brand:#3b4fd6;--brand2:#2536a8;--wash:#e4e8fb;
+      --amber:#e08a1e;--red:#c23b39;--code:#131a2b;
+      --shadow:0 16px 40px rgba(19,26,43,.10);--radius:18px;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth;scroll-padding-top:28px}
+    body{margin:0;color:var(--ink);background:var(--paper);font:16px/1.78 system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+    a{color:var(--brand2);text-decoration-thickness:1px;text-underline-offset:3px}
+    code,kbd{font-family:"Cascadia Code","SFMono-Regular",Consolas,monospace}
+    .shell{display:grid;grid-template-columns:272px minmax(0,860px);gap:48px;max-width:1240px;margin:auto;padding:34px 28px 80px}
+    aside{position:sticky;top:22px;align-self:start;max-height:calc(100vh - 44px);overflow:auto;padding:18px 16px;border:1px solid var(--line);background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-radius:16px}
+    .brand{font-weight:850;letter-spacing:-.02em;margin:0 0 12px}.brand i{display:inline-block;width:10px;height:10px;background:var(--brand);border-radius:3px;margin-right:8px;transform:rotate(45deg)}
+    aside nav a{display:block;padding:6px 9px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px}
+    aside nav a:hover,aside nav a.active{background:var(--wash);color:var(--brand2);font-weight:700}
+    .side-note{font-size:12px;color:var(--muted);border-top:1px solid var(--line);margin-top:12px;padding:14px 8px 0}
+    main{min-width:0}.hero{position:relative;overflow:hidden;padding:54px 52px;background:linear-gradient(135deg,#2536a8,#3b4fd6);color:white;border-radius:28px;box-shadow:var(--shadow)}
+    .hero:after{content:"";position:absolute;width:280px;height:280px;border-radius:34px;right:-100px;top:-120px;background:var(--amber);opacity:.9;transform:rotate(25deg)}
+    .eyebrow{display:inline-flex;gap:8px;align-items:center;padding:5px 11px;border:1px solid rgba(255,255,255,.35);border-radius:999px;font-size:13px;letter-spacing:.04em}
+    h1{position:relative;z-index:1;margin:20px 0 14px;max-width:730px;font:850 clamp(34px,6vw,62px)/1.08 Georgia,"Microsoft YaHei",serif;letter-spacing:-.04em}
+    .hero p{position:relative;z-index:1;max-width:700px;color:#e3e8ff;font-size:18px;margin:0}
+    .hero-meta{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}.chip{padding:7px 11px;background:rgba(255,255,255,.13);border-radius:8px;font-size:13px}
+    section{padding-top:54px}h2{font:800 33px/1.25 Georgia,"Microsoft YaHei",serif;letter-spacing:-.025em;margin:0 0 18px}h3{margin:32px 0 10px;font-size:21px}h4{font-size:16px;margin:22px 0 6px}
+    .lead{font-size:18px;color:#38425c}.callout{border-left:4px solid var(--brand);background:var(--card);padding:17px 20px;border-radius:0 13px 13px 0;box-shadow:0 5px 18px rgba(19,26,43,.05)}
+    .callout.warn{border-color:var(--amber);background:#fff7e9}.callout.danger{border-color:var(--red);background:#fdeeed}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;box-shadow:0 5px 20px rgba(19,26,43,.04)}
+    .card .num{display:grid;place-items:center;width:35px;height:35px;border-radius:10px;background:var(--wash);color:var(--brand2);font-weight:850;margin-bottom:14px}.card h3{margin:0 0 6px;font-size:18px}.card p{margin:0;color:var(--muted);font-size:14px}
+    .flow{display:grid;grid-template-columns:1fr 32px 1fr 32px 1fr;align-items:stretch;margin:22px 0}.flow .node{background:var(--card);border:1px solid var(--line);padding:18px;border-radius:14px;text-align:center}.flow .arrow{display:grid;place-items:center;color:var(--brand);font-size:24px;font-weight:bold}.node strong{display:block}.node small{color:var(--muted)}
+    .loop{border:2px dashed #9aa8ee;border-radius:18px;padding:18px;background:#eef1fe}.loop-label{text-align:center;color:var(--brand2);font-size:13px;font-weight:750;margin-top:8px}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}table{width:100%;border-collapse:collapse;min-width:650px}th,td{text-align:left;vertical-align:top;padding:13px 15px;border-bottom:1px solid var(--line)}th{background:#eaeefb;font-size:13px}td{font-size:14px}tr:last-child td{border-bottom:0}
+    .codebox{position:relative;margin:16px 0 22px;border-radius:15px;overflow:hidden;background:var(--code);box-shadow:var(--shadow)}.codehead{display:flex;justify-content:space-between;align-items:center;padding:9px 13px;color:#9fb0d8;background:#0c1120;font-size:12px;border-bottom:1px solid #23304f}.copy{border:1px solid #43537c;background:transparent;color:#dbe3f5;border-radius:7px;padding:4px 9px;cursor:pointer}.copy:hover{background:#1c2743}pre{margin:0;overflow:auto;padding:20px;color:#e6ecfa;font:13px/1.65 "Cascadia Code",Consolas,monospace;tab-size:4}.kw{color:#7fa9ff}.fn{color:#8fe0c8}.st{color:#e6c07b}.cm{color:#7c89a8}.ty{color:#c8a6ff}
+    .tree{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 22px;white-space:pre;overflow:auto;font:14px/1.7 "Cascadia Code",Consolas,monospace}
+    .steps{counter-reset:step}.step{position:relative;margin-left:22px;padding:0 0 28px 34px;border-left:2px solid #b9c4ee}.step:before{counter-increment:step;content:counter(step);position:absolute;left:-18px;top:0;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--brand);color:white;font-weight:850}.step h3{margin:0 0 6px}.step:last-child{border-left-color:transparent}
+    .pill{display:inline-block;font-size:12px;font-weight:750;padding:2px 8px;border-radius:99px;background:var(--wash);color:var(--brand2)}.pill.amber{background:#ffedce;color:#835100}
+    .checklist{list-style:none;padding:0}.checklist li{position:relative;padding:7px 0 7px 30px}.checklist li:before{content:"✓";position:absolute;left:0;top:7px;width:20px;height:20px;display:grid;place-items:center;border-radius:50%;background:var(--wash);color:var(--brand2);font-size:12px;font-weight:bold}
+    details{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0;padding:0 16px}summary{cursor:pointer;font-weight:720;padding:15px 0}details p{color:var(--muted)}
+    footer{margin-top:60px;padding:24px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+    @media(max-width:900px){.shell{display:block;padding:16px 18px 60px}aside{position:relative;top:auto;max-height:none;margin-bottom:18px}aside nav{display:flex;overflow:auto;gap:2px}aside nav a{white-space:nowrap}.side-note{display:none}.hero{padding:38px 26px}.grid,.grid.three{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.flow .arrow{transform:rotate(90deg);height:30px}section{padding-top:42px}}
+    @media print{aside,.copy{display:none}.shell{display:block;max-width:none}.hero{box-shadow:none}section{break-inside:auto}.card,.codebox{break-inside:avoid}body{background:white}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand"><i></i>LangGraph Cursor Agent</div>
+    <nav aria-label="文章目录">
+      <a href="#overview">1. Agent 与 LangGraph</a><a href="#mental-model">2. 核心心智模型</a>
+      <a href="#workflow">3. 编写全流程</a><a href="#architecture">4. 示例架构</a>
+      <a href="#setup">5. 安装与密钥</a><a href="#implementation">6. 关键实现</a>
+      <a href="#run">7. 运行演示</a><a href="#debug">8. 调试与测试</a>
+      <a href="#production">9. 生产化</a><a href="#faq">10. 常见问题</a>
+    </nav>
+    <div class="side-note">内容基于 LangGraph 1.x。配套源代码位于 <code>langgraph_cursor_agent/</code>。</div>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <span class="eyebrow">LANGGRAPH 1.x · 完整实践</span>
+      <h1>从状态图到<br>会改代码的 Agent</h1>
+      <p>用显式的状态、节点、条件边、会写状态的工具、人工审批与检查点，构建一个能读代码、改代码、跑测试并自我验证的真实工程 Agent。</p>
+      <div class="hero-meta"><span class="chip">Python 3.10+（64 位）</span><span class="chip">OpenAI API Key</span><span class="chip">工作区隔离</span><span class="chip">人工审批</span><span class="chip">可测试</span></div>
+    </header>
+
+    <section id="overview">
+      <h2>1. Agent 与 LangGraph 到底解决什么</h2>
+      <p class="lead">普通 LLM 调用是“一问一答”；Agent 让模型在一个受控循环里反复观察状态、选择工具、执行动作、读取结果，直到得到最终答案。LangGraph 把这个循环显式建模成一张有状态的图，让流程可控、可观察、可恢复。</p>
+      <div class="grid three">
+        <article class="card"><div class="num">S</div><h3>State 状态</h3><p>在节点间流动的唯一“共享白板”：消息历史、改动的文件、执行过的命令等。</p></article>
+        <article class="card"><div class="num">N</div><h3>Node 节点</h3><p>一段确定职责的函数：调用模型、执行工具、人工审批、总结或落库。</p></article>
+        <article class="card"><div class="num">E</div><h3>Edge 边</h3><p>决定下一步去哪里。条件边把“有工具调用”导向工具，把“最终回复”导向结束。</p></article>
+      </div>
+      <h3>什么时候值得用 LangGraph</h3>
+      <div class="table-wrap"><table><thead><tr><th>场景</th><th>建议</th><th>原因</th></tr></thead><tbody>
+        <tr><td>单次摘要、翻译、分类</td><td>直接调用模型</td><td>没有循环、状态恢复或工具编排需求。</td></tr>
+        <tr><td>标准“模型 ↔ 工具”Agent</td><td>可先用 LangChain <code>create_agent</code></td><td>它本身就运行在 LangGraph 上，样板代码更少。</td></tr>
+        <tr><td>自定义审批、重试、分支、并行或恢复</td><td><strong>用 LangGraph</strong></td><td>需要明确控制流程、状态与持久化边界。</td></tr>
+        <tr><td>代码修改、数据处理、长任务</td><td><strong>LangGraph + 隔离工具</strong></td><td>可观察、可恢复、可审计，还能把高风险动作放进审批节点。</td></tr>
+      </tbody></table></div>
+      <div class="callout warn" style="margin-top:18px"><strong>版本提醒：</strong>LangGraph 1.x 已弃用 <code>langgraph.prebuilt.create_react_agent</code>，高层入口迁移为 <code>langchain.agents.create_agent</code>。本文为讲清底层流程，直接使用稳定的 <code>StateGraph</code>、<code>ToolNode</code>、条件边与 <code>interrupt</code>。</div>
+    </section>
+
+    <section id="mental-model">
+      <h2>2. 最重要的心智模型：受控的 ReAct 循环</h2>
+      <div class="loop">
+        <div class="flow"><div class="node"><strong>agent</strong><small>读状态，决定回复或调用工具</small></div><div class="arrow">→</div><div class="node"><strong>Router</strong><small>检查 tool_calls / 是否需审批</small></div><div class="arrow">→</div><div class="node"><strong>tools</strong><small>执行函数，产出 ToolMessage</small></div></div>
+        <div class="loop-label">有工具调用：tools → agent；需审批：先 approval；无工具调用：agent → END</div>
+      </div>
+      <p>一次 Agent 执行不是模型“在内部神秘地做完所有事”，而是多轮可见的状态转换：</p>
+      <ol>
+        <li>用户消息进入状态的 <code>messages</code>。</li>
+        <li>模型读取系统提示与历史，返回普通文本或结构化 <code>tool_calls</code>。</li>
+        <li>路由函数判断：无工具 → 结束；有敏感工具且开启审批 → <code>approval</code>；否则 → <code>tools</code>。</li>
+        <li><code>ToolNode</code> 执行对应 Python 函数，把结果作为 <code>ToolMessage</code> 追加回状态。</li>
+        <li>模型基于工具结果继续规划，直到给出不含工具调用的最终消息。</li>
+        <li>检查点在超步边界保存状态，之后可用同一 <code>thread_id</code> 继续或恢复。</li>
+      </ol>
+      <div class="callout"><strong>关键原则：</strong>模型只负责“决定”，工具负责“执行”，图负责“约束流程”，状态负责“保存事实”。绝不要让模型的自然语言文本本身承担真实世界的副作用。</div>
+    </section>
+
+    <section id="workflow">
+      <h2>3. 编写 Agent 的完整流程</h2>
+      <div class="steps">
+        <div class="step"><h3>把目标写成可验收的任务</h3><p>先定义输入、输出与完成条件。例如：“运行测试找出失败项，修复实现，使 pytest 全绿，并报告改动与验证结果”。无法客观判断完成，Agent 就难以可靠停止。</p></div>
+        <div class="step"><h3>划定权限与风险边界</h3><p>明确可读/可写目录、可运行命令、联网权限、超时、输出上限、敏感文件与必须人工确认的动作。这些边界必须写进工具代码，而不是只写进提示词。</p></div>
+        <div class="step"><h3>设计状态 Schema</h3><p>最小 Agent 可只用消息。本例用 <code>TypedDict</code> 额外记录 <code>changed_files</code>、<code>commands_run</code>，并为累积字段配置 reducer，让多次工具调用能“追加”而不是“覆盖”。</p></div>
+        <div class="step"><h3>把能力做成窄而清晰的工具</h3><p>每个工具只做一件事，参数类型与 docstring 要准确——模型正是靠它们决定何时调用。对路径、参数、返回长度与异常做校验，把安全逻辑独立成零依赖模块以便单测。</p></div>
+        <div class="step"><h3>初始化外部模型并绑定工具</h3><p>密钥来自环境变量。选支持 tool calling 的模型，用 <code>bind_tools</code> 把工具 Schema 交给模型。</p></div>
+        <div class="step"><h3>实现节点</h3><p>模型节点返回状态增量 <code>{"messages": [response]}</code>；工具节点用 <code>ToolNode</code>，它负责并行工具调用与 ToolMessage 对齐；需要时增加审批节点。</p></div>
+        <div class="step"><h3>连边并编译图</h3><p>从 <code>START</code> 到 <code>agent</code>；<code>agent</code> 经条件边去 <code>tools</code> / <code>approval</code> / <code>END</code>；工具执行后回 <code>agent</code>。编译时注入 checkpointer。</p></div>
+        <div class="step"><h3>流式运行与可观察性</h3><p>开发期查看每个状态更新与工具调用；面向用户只输出进度与最终答案。记录延迟、token、工具错误、循环次数与验收结果。</p></div>
+        <div class="step"><h3>用故障案例验证</h3><p>至少测试路径穿越、超大文件、命令超时、工具异常、测试失败、审批拒绝、对话恢复与最大循环限制。用假模型驱动图，不消耗 token。</p></div>
+      </div>
+    </section>
+
+    <section id="architecture">
+      <h2>4. 配套代码 Agent 的架构</h2>
+      <p>示例 Agent 的能力限定在用户指定的工作区，包含五个工具：列文件、读文件、文本搜索、写文件、运行白名单命令。安全逻辑被单独抽到零依赖的 <code>sandbox.py</code>，图与工具封装放在 <code>agent.py</code>。它适合小型代码修复、补测试、重构与项目问答。</p>
+      <div class="tree">langgraph_cursor_agent/
+├── agent.py              # 自定义状态、工具封装、图、审批、CLI
+├── sandbox.py            # 零第三方依赖的安全工作区（路径/敏感文件/命令白名单）
+├── requirements.txt      # LangGraph 与 OpenAI 集成
+├── .env.example          # 配置字段示例（不放真实密钥）
+├── README.md             # 快速运行说明
+├── tests/
+│   ├── test_sandbox.py   # 仅需标准库 + pytest，验证安全边界
+│   └── test_graph.py     # 用假模型驱动完整图循环与审批（需已装 langgraph）
+└── workspace/            # Agent 唯一允许操作的演示目录
+    ├── stringkit.py          # 内置一个真实 bug 的字符串工具
+    └── test_stringkit.py     # 能捕获该 bug 的测试</div>
+      <h3>数据与控制流</h3>
+      <div class="flow"><div class="node"><strong>CLI</strong><small>HumanMessage + thread_id</small></div><div class="arrow">→</div><div class="node"><strong>编译后的图</strong><small>状态 · 路由 · 审批 · 检查点</small></div><div class="arrow">→</div><div class="node"><strong>OpenAI + 本地工具</strong><small>API 决策，本地受控执行</small></div></div>
+      <div class="grid">
+        <article class="card"><h3>模型在外部</h3><p>消息与工具 Schema 发往 OpenAI API；<code>OPENAI_MODEL</code> 默认 <code>gpt-5-mini</code>，可用环境变量替换。</p></article>
+        <article class="card"><h3>代码工具在本地</h3><p>文件操作与命令执行都发生在本机工作区内。模型不会直接获得任意文件系统或终端权限。</p></article>
+      </div>
+    </section>
+
+    <section id="setup">
+      <h2>5. 安装、API Key 与配置</h2>
+      <div class="callout warn"><strong>请用 64 位 Python。</strong><code>langchain-openai</code>/<code>langgraph</code> 依赖 <code>tiktoken</code> 与 <code>ormsgpack</code>，它们在 32 位 Windows 上没有预编译 wheel、需要 Rust 从源码构建。用 64 位 Python 3.10+ 才能直接 <code>pip install</code>。</div>
+      <h3>5.1 创建隔离环境</h3>
+      <div class="codebox"><div class="codehead"><span>PowerShell</span><button class="copy">复制</button></div><pre><code>cd D:\AIResearch\langgraph_cursor_agent
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt</code></pre></div>
+      <div class="codebox"><div class="codehead"><span>macOS / Linux</span><button class="copy">复制</button></div><pre><code>cd langgraph_cursor_agent
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt</code></pre></div>
+      <h3>5.2 用环境变量设置密钥</h3>
+      <div class="codebox"><div class="codehead"><span>PowerShell（仅当前终端）</span><button class="copy">复制</button></div><pre><code>$env:OPENAI_API_KEY="sk-替换为你的真实密钥"
+$env:OPENAI_MODEL="gpt-5-mini"</code></pre></div>
+      <div class="codebox"><div class="codehead"><span>macOS / Linux（仅当前 shell）</span><button class="copy">复制</button></div><pre><code>export OPENAI_API_KEY="sk-替换为你的真实密钥"
+export OPENAI_MODEL="gpt-5-mini"</code></pre></div>
+      <div class="callout danger"><strong>不要把真实 API Key 写进 HTML、Python、<code>.env.example</code> 或 Git。</strong>环境变量不是完整的密钥管理方案；生产环境应使用部署平台 Secret、Vault/KMS，并限制额度与轮换周期。也不要把 Key 放进图状态，因为检查点与日志可能持久化它。</div>
+      <h3>5.3 依赖版本</h3>
+      <div class="codebox"><div class="codehead"><span>requirements.txt</span><button class="copy">复制</button></div><pre><code>langgraph&gt;=1.0,&lt;2.0
+langchain-openai&gt;=1.0,&lt;2.0
+pytest&gt;=8.0,&lt;10.0</code></pre></div>
+      <p>教程限定主版本以减少破坏性升级。要完全可复现，部署前应生成锁文件或固定到具体补丁版本。</p>
+    </section>
+
+    <section id="implementation">
+      <h2>6. 关键实现逐段解析</h2>
+      <p class="lead">完整实现见 <a href="langgraph_cursor_agent/agent.py">agent.py</a> 与 <a href="langgraph_cursor_agent/sandbox.py">sandbox.py</a>。下面拆开最影响正确性与安全性的部分。</p>
+
+      <h3>6.1 状态：自定义 Schema 与 reducer</h3>
+      <p>最小 Agent 可只用消息。本例还要记录“改了哪些文件”“跑了哪些命令”，于是用 <code>TypedDict</code> 定义状态，并给累积字段配置 reducer：</p>
+      <div class="codebox"><div class="codehead"><span>agent.py · AgentState</span><button class="copy">复制</button></div><pre><code><span class="kw">import</span> operator
+<span class="kw">from</span> typing <span class="kw">import</span> Annotated
+<span class="kw">from</span> typing_extensions <span class="kw">import</span> TypedDict
+<span class="kw">from</span> langgraph.graph.message <span class="kw">import</span> add_messages
+
+<span class="kw">class</span> <span class="ty">AgentState</span>(TypedDict):
+    messages: Annotated[list, add_messages]        <span class="cm"># 追加式消息</span>
+    changed_files: Annotated[list[str], operator.add]  <span class="cm"># 累积改动文件</span>
+    commands_run: Annotated[list[str], operator.add]   <span class="cm"># 累积执行命令</span>
+    approved: bool                                  <span class="cm"># 审批结果（后写覆盖）</span></code></pre></div>
+      <div class="callout"><strong>Reducer 很关键：</strong>同一字段被多个节点写入时，未配置 reducer 通常是“覆盖”。消息、文件清单这类累积值必须显式声明合并方式（<code>add_messages</code> / <code>operator.add</code>），否则后一次工具结果会冲掉前一次。</div>
+
+      <h3>6.2 工具的真正权限边界：零依赖的 sandbox.py</h3>
+      <p>安全逻辑独立成一个不依赖任何第三方库的模块，这样最关键的部分可以用标准库单测，与模型 SDK 完全解耦。</p>
+      <div class="codebox"><div class="codehead"><span>sandbox.py · 路径限定（节选）</span><button class="copy">复制</button></div><pre><code><span class="kw">def</span> <span class="fn">safe_path</span>(self, relative_path: str) -&gt; Path:
+    <span class="kw">if not</span> relative_path <span class="kw">or</span> <span class="st">"\x00"</span> <span class="kw">in</span> relative_path:
+        <span class="kw">raise</span> WorkspaceError(<span class="st">"路径不能为空或包含空字符"</span>)
+    candidate = (self.root / relative_path).resolve()
+    <span class="kw">if</span> candidate != self.root <span class="kw">and</span> self.root <span class="kw">not in</span> candidate.parents:
+        <span class="kw">raise</span> WorkspaceError(<span class="st">"拒绝访问工作区之外的路径"</span>)
+    <span class="kw">if</span> is_sensitive(candidate):
+        <span class="kw">raise</span> WorkspaceError(<span class="st">"拒绝访问可能包含密钥或凭据的文件"</span>)
+    <span class="kw">return</span> candidate</code></pre></div>
+      <ul class="checklist"><li>先 <code>resolve()</code> 再检查父目录，可挡住 <code>../</code> 与多数符号链接逃逸。</li><li>读文件限制大小、编码与返回长度，避免上下文被巨型文件撑满。</li><li>搜索限制匹配条数，列表限制文件数。</li><li>敏感文件（<code>.env</code>、私钥、凭据）在读写入口都拦截。</li><li>命令用参数数组 + <code>shell=False</code>，再校验程序白名单与超时。</li></ul>
+      <div class="callout warn"><strong>白名单 ≠ 沙箱。</strong>允许 <code>python</code> 就意味着被运行的脚本仍能执行任意系统调用。真正的生产环境要叠加容器、低权限用户、只挂载临时工作区、网络策略、资源配额与人工审批。</div>
+
+      <h3>6.3 把 sandbox 封装成工具，并让工具写回状态</h3>
+      <p>只读工具直接返回字符串；有副作用的 <code>write_file</code>、<code>run_command</code> 返回 <code>Command</code>，同时把 <code>ToolMessage</code> 和自定义状态字段一起更新。<code>InjectedToolCallId</code> 由 LangGraph 注入，用于生成配对的 ToolMessage。</p>
+      <div class="codebox"><div class="codehead"><span>agent.py · 会写状态的工具</span><button class="copy">复制</button></div><pre><code><span class="kw">from</span> langchain_core.tools <span class="kw">import</span> tool
+<span class="kw">from</span> langchain_core.tools.base <span class="kw">import</span> InjectedToolCallId
+<span class="kw">from</span> langchain_core.messages <span class="kw">import</span> ToolMessage
+<span class="kw">from</span> langgraph.types <span class="kw">import</span> Command
+
+<span class="cm">@tool</span>
+<span class="kw">def</span> <span class="fn">write_file</span>(relative_path: str, content: str,
+               tool_call_id: Annotated[str, InjectedToolCallId]) -&gt; Command:
+    <span class="st">"""将完整 UTF-8 content 写入工作区文件。"""</span>
+    message, changed = workspace.write_file(relative_path, content)
+    update = {<span class="st">"messages"</span>: [ToolMessage(message, tool_call_id=tool_call_id)]}
+    <span class="kw">if</span> changed <span class="kw">is not</span> None:
+        update[<span class="st">"changed_files"</span>] = [changed]  <span class="cm"># reducer 会追加</span>
+    <span class="kw">return</span> Command(update=update)</code></pre></div>
+      <p>这样每成功写一个文件，<code>changed_files</code> 就多一项；<code>run_command</code> 同理把命令记入 <code>commands_run</code>。这些累积事实让 <code>/state</code> 命令与生产审计都变得简单。</p>
+
+      <h3>6.4 外部模型：读取 API Key 并绑定工具</h3>
+      <div class="codebox"><div class="codehead"><span>agent.py · 模型初始化</span><button class="copy">复制</button></div><pre><code><span class="kw">if not</span> os.getenv(<span class="st">"OPENAI_API_KEY"</span>):
+    <span class="kw">raise</span> RuntimeError(<span class="st">"未设置 OPENAI_API_KEY"</span>)
+<span class="kw">from</span> langchain_openai <span class="kw">import</span> ChatOpenAI  <span class="cm"># 惰性导入，便于测试注入假模型</span>
+
+model = ChatOpenAI(
+    model=os.getenv(<span class="st">"OPENAI_MODEL"</span>, <span class="st">"gpt-5-mini"</span>),
+    timeout=60, max_retries=2,
+)
+model_with_tools = model.bind_tools(tools)</code></pre></div>
+      <p><code>ChatOpenAI</code> 会自动读取 <code>OPENAI_API_KEY</code>。示例也支持可选的 <code>OPENAI_BASE_URL</code>，但兼容端点必须正确实现 OpenAI 工具调用协议；若厂商有专用 LangChain 集成，应优先使用它。把 <code>ChatOpenAI</code> 做成惰性导入，还能让测试注入“假模型”而完全不碰真实网络。</p>
+
+      <h3>6.5 模型节点：输入完整状态，输出状态增量</h3>
+      <div class="codebox"><div class="codehead"><span>agent.py · 模型节点</span><button class="copy">复制</button></div><pre><code><span class="kw">def</span> <span class="fn">call_model</span>(state: AgentState):
+    response = model_with_tools.invoke([
+        SystemMessage(content=SYSTEM_PROMPT),
+        *state[<span class="st">"messages"</span>],
+    ])
+    <span class="kw">return</span> {<span class="st">"messages"</span>: [response]}</code></pre></div>
+      <p>系统提示在每次调用时作为首条消息注入，不写入持久化历史。返回列表只含本轮新消息，reducer 负责追加。</p>
+
+      <h3>6.6 图：条件边 + 审批分支</h3>
+      <div class="codebox"><div class="codehead"><span>agent.py · 组图</span><button class="copy">复制</button></div><pre><code><span class="kw">def</span> <span class="fn">route_after_agent</span>(state):
+    <span class="kw">if</span> tools_condition(state) != <span class="st">"tools"</span>:
+        <span class="kw">return</span> END                     <span class="cm"># 无工具调用 → 结束</span>
+    last = state[<span class="st">"messages"</span>][-1]
+    <span class="kw">if</span> require_approval <span class="kw">and</span> any(tc[<span class="st">"name"</span>] <span class="kw">in</span> SENSITIVE_TOOLS
+                              <span class="kw">for</span> tc <span class="kw">in</span> last.tool_calls):
+        <span class="kw">return</span> <span class="st">"approval"</span>            <span class="cm"># 敏感工具 → 先审批</span>
+    <span class="kw">return</span> <span class="st">"tools"</span>
+
+builder = StateGraph(AgentState)
+builder.add_node(<span class="st">"agent"</span>, call_model)
+builder.add_node(<span class="st">"tools"</span>, ToolNode(tools, handle_tool_errors=True))
+builder.add_node(<span class="st">"approval"</span>, approval_node)
+builder.add_edge(START, <span class="st">"agent"</span>)
+builder.add_conditional_edges(<span class="st">"agent"</span>, route_after_agent,
+    {<span class="st">"tools"</span>: <span class="st">"tools"</span>, <span class="st">"approval"</span>: <span class="st">"approval"</span>, END: END})
+builder.add_conditional_edges(<span class="st">"approval"</span>, route_after_approval,
+    {<span class="st">"tools"</span>: <span class="st">"tools"</span>, <span class="st">"agent"</span>: <span class="st">"agent"</span>})
+builder.add_edge(<span class="st">"tools"</span>, <span class="st">"agent"</span>)
+graph = builder.compile(checkpointer=InMemorySaver())</code></pre></div>
+      <p><code>tools_condition</code> 查看最后一条 AI 消息：有 <code>tool_calls</code> 返回 <code>"tools"</code>，否则返回 <code>END</code>。<code>ToolNode</code> 会按 tool_call id 生成配对的 ToolMessage，并支持工具返回 <code>Command</code> 来更新状态。</p>
+
+      <h3>6.7 人工审批：interrupt 与 resume</h3>
+      <p>开启 <code>AGENT_REQUIRE_APPROVAL</code> 后，敏感工具先进入 <code>approval</code> 节点，用 <code>interrupt</code> 暂停并把待执行动作交给外部确认；恢复时用 <code>Command(resume=...)</code> 把答复送回同一位置。</p>
+      <div class="codebox"><div class="codehead"><span>agent.py · 审批节点</span><button class="copy">复制</button></div><pre><code><span class="kw">from</span> langgraph.types <span class="kw">import</span> interrupt
+
+<span class="kw">def</span> <span class="fn">approval_node</span>(state):
+    last = state[<span class="st">"messages"</span>][-1]
+    pending = [{<span class="st">"name"</span>: tc[<span class="st">"name"</span>], <span class="st">"args"</span>: tc[<span class="st">"args"</span>]}
+               <span class="kw">for</span> tc <span class="kw">in</span> last.tool_calls <span class="kw">if</span> tc[<span class="st">"name"</span>] <span class="kw">in</span> SENSITIVE_TOOLS]
+    decision = interrupt({<span class="st">"action"</span>: <span class="st">"confirm_sensitive_tools"</span>, <span class="st">"pending"</span>: pending})
+    <span class="kw">if</span> str(decision).strip().lower() <span class="kw">in</span> {<span class="st">"y"</span>, <span class="st">"yes"</span>, <span class="st">"同意"</span>}:
+        <span class="kw">return</span> {<span class="st">"approved"</span>: True}
+    denials = [ToolMessage(<span class="st">"用户拒绝执行该操作。"</span>, tool_call_id=tc[<span class="st">"id"</span>])
+               <span class="kw">for</span> tc <span class="kw">in</span> last.tool_calls]   <span class="cm"># 必须回应每个 tool_call</span>
+    <span class="kw">return</span> {<span class="st">"approved"</span>: False, <span class="st">"messages"</span>: denials}</code></pre></div>
+      <p>拒绝时要为“每一个”待处理 tool_call 生成一条 ToolMessage，否则消息序列不完整、模型下一次调用会报错。中断要求图启用 checkpointer，并使用相同 thread 配置恢复。CLI 侧的循环把中断展示给用户并回传答复：</p>
+      <div class="codebox"><div class="codehead"><span>agent.py · CLI 处理中断</span><button class="copy">复制</button></div><pre><code><span class="kw">while</span> (payload := _pending_interrupt(graph, config)) <span class="kw">is not</span> None:
+    print(<span class="st">"[需要审批]"</span>, payload[<span class="st">"pending"</span>])
+    answer = input(<span class="st">"允许执行？(y/N)&gt; "</span>).strip() <span class="kw">or</span> <span class="st">"n"</span>
+    final = _stream_until_pause(graph, Command(resume=answer), config)</code></pre></div>
+
+      <h3>6.8 记忆：thread_id 与 checkpointer</h3>
+      <div class="codebox"><div class="codehead"><span>带会话检查点的调用</span><button class="copy">复制</button></div><pre><code>config = {<span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"demo"</span>}}
+graph.invoke({<span class="st">"messages"</span>: [HumanMessage(content=<span class="st">"先看项目结构"</span>)]}, config)
+<span class="cm"># 同一 thread_id 的下一次调用会自动加载已有状态</span></code></pre></div>
+      <p><code>InMemorySaver</code> 只适合演示，进程退出即丢失。单机可换 SQLite checkpointer，生产环境常用 Postgres 等持久化实现。持久化含用户消息、代码片段与工具结果，应设置加密、保留期与访问控制。</p>
+
+      <h3>6.9 终止、递归上限与无限循环</h3>
+      <p>图的正常终止条件是模型不再发工具调用。但模型可能反复尝试失败的工具，因此要设置递归上限：</p>
+      <div class="codebox"><div class="codehead"><span>限制图步数</span><button class="copy">复制</button></div><pre><code>config = {
+    <span class="st">"configurable"</span>: {<span class="st">"thread_id"</span>: <span class="st">"demo"</span>},
+    <span class="st">"recursion_limit"</span>: 40,
+}</code></pre></div>
+    </section>
+
+    <section id="run">
+      <h2>7. 运行一个完整代码修复任务</h2>
+      <h3>7.1 启动</h3>
+      <div class="codebox"><div class="codehead"><span>PowerShell</span><button class="copy">复制</button></div><pre><code>cd D:\AIResearch\langgraph_cursor_agent
+.\.venv\Scripts\Activate.ps1
+python agent.py --workspace .\workspace --thread-id demo</code></pre></div>
+      <h3>7.2 待修复的真实 bug</h3>
+      <p><code>workspace/stringkit.py</code> 的 <code>truncate</code> 截断时直接拼接后缀，导致结果长度超过 <code>max_length</code>；对应测试因此失败：</p>
+      <div class="codebox"><div class="codehead"><span>stringkit.py（有 bug）</span><button class="copy">复制</button></div><pre><code><span class="kw">def</span> <span class="fn">truncate</span>(text: str, max_length: int, suffix: str = <span class="st">"..."</span>) -&gt; str:
+    <span class="kw">if</span> max_length &lt; 0:
+        <span class="kw">raise</span> ValueError(<span class="st">"max_length must be non-negative"</span>)
+    <span class="kw">if</span> len(text) &lt;= max_length:
+        <span class="kw">return</span> text
+    <span class="cm"># BUG: 没为后缀留空间，结果会比 max_length 更长</span>
+    <span class="kw">return</span> text[:max_length] + suffix</code></pre></div>
+      <h3>7.3 输入任务</h3>
+      <div class="codebox"><div class="codehead"><span>Agent 任务</span><button class="copy">复制</button></div><pre><code>先运行 pytest 找出失败的测试，然后修复 stringkit.py 中 truncate 的 bug，
+使结果长度不超过 max_length（要为后缀留出空间），最后重新运行 pytest 确认全部通过。
+不要修改测试，最后说明改了什么和验证结果。</code></pre></div>
+      <h3>7.4 预期执行轨迹</h3>
+      <div class="table-wrap"><table><thead><tr><th>轮次</th><th>模型决定</th><th>工具与状态变化</th></tr></thead><tbody>
+        <tr><td>1</td><td>先了解结构</td><td><code>list_files("**/*.py")</code> → ToolMessage 入状态</td></tr>
+        <tr><td>2</td><td>跑测试看红</td><td><code>run_command("python -m pytest -q")</code>，失败信息进入状态，<code>commands_run</code> +1</td></tr>
+        <tr><td>3</td><td>读实现</td><td><code>read_file("stringkit.py")</code> 定位 bug</td></tr>
+        <tr><td>4</td><td>最小修复</td><td><code>write_file</code> 改为预留后缀空间，<code>changed_files</code> +1</td></tr>
+        <tr><td>5</td><td>再验证</td><td><code>run_command("python -m pytest -q")</code> 全绿</td></tr>
+        <tr><td>6</td><td>总结</td><td>无工具调用，条件边转到 <code>END</code></td></tr>
+      </tbody></table></div>
+      <h3>7.5 多轮继续与状态</h3>
+      <p>保持相同 <code>thread_id</code>，可继续输入“再为 normalize_spaces 补一个只含空白的边界测试”。<code>/state</code> 查看已保存消息数、改动文件与执行命令；<code>/new</code> 切换会话；<code>/quit</code> 退出。</p>
+      <div class="callout"><strong>调用成本提示：</strong>同一会话消息会持续增长，每次模型调用可能重复传输历史。长任务应做历史裁剪或摘要，把大文件内容放外部存储并只在状态里保存引用。</div>
+    </section>
+
+    <section id="debug">
+      <h2>8. 调试、测试与可观察性</h2>
+      <h3>分层测试，最后才做真实模型端到端</h3>
+      <div class="grid three">
+        <article class="card"><span class="pill">单元测试</span><h3>sandbox 层</h3><p>测试 <code>../</code> 穿越、绝对路径、敏感文件、编码/大小限制、命令白名单与超时。零第三方依赖，任何环境都能跑。</p></article>
+        <article class="card"><span class="pill amber">集成测试</span><h3>图层</h3><p>注入返回固定 tool_calls 的假模型，验证 agent → tools → agent → END、状态累积、审批同意/拒绝两条分支。不消耗 token。</p></article>
+        <article class="card"><span class="pill">端到端</span><h3>模型层</h3><p>用临时工作区与低额度测试密钥跑少量真实任务，断言文件 diff 与测试结果，而不是只比自然语言。</p></article>
+      </div>
+      <div class="codebox"><div class="codehead"><span>tests/test_graph.py · 假模型驱动完整循环</span><button class="copy">复制</button></div><pre><code><span class="kw">class</span> <span class="ty">FakeModel</span>:
+    <span class="kw">def</span> <span class="fn">bind_tools</span>(self, _tools): <span class="kw">return</span> self
+    <span class="kw">def</span> <span class="fn">invoke</span>(self, _messages):
+        ...  <span class="cm"># 按顺序返回预设的 AIMessage（可带 tool_calls）</span>
+
+graph = build_graph(ws, model=FakeModel([...]), require_approval=False)
+result = graph.invoke({<span class="st">"messages"</span>: [...]}, config)
+<span class="kw">assert</span> result[<span class="st">"changed_files"</span>] == [<span class="st">"gen.py"</span>]  <span class="cm"># 工具确实写了状态</span></code></pre></div>
+      <p><code>build_graph(..., model=...)</code> 允许注入模型，因此图层测试无需 API Key、不联网。开发期还可用 <code>stream_mode="updates"</code> 查看每个节点写入的增量：</p>
+      <div class="codebox"><div class="codehead"><span>stream_mode="updates"</span><button class="copy">复制</button></div><pre><code><span class="kw">for</span> update <span class="kw">in</span> graph.stream(inputs, config, stream_mode=<span class="st">"updates"</span>):
+    print(update)  <span class="cm"># 每个节点的状态增量</span></code></pre></div>
+      <h3>常见失败的定位顺序</h3>
+      <ol><li>确认环境变量存在，但不要打印其值。</li><li>确认模型支持工具调用，模型名与账号权限正确。</li><li>查看最后一条 AIMessage 是否带 <code>tool_calls</code>。</li><li>查看 ToolMessage 的 tool_call_id 是否配对。</li><li>区分工具返回的“业务失败”与 Python 异常。</li><li>检查图的 <code>next</code> 节点、递归上限与同一 thread 的历史。</li></ol>
+    </section>
+
+    <section id="production">
+      <h2>9. 从演示到生产：需要补齐什么</h2>
+      <div class="table-wrap"><table><thead><tr><th>领域</th><th>演示做法</th><th>生产建议</th></tr></thead><tbody>
+        <tr><td>隔离</td><td>路径校验 + 命令白名单</td><td>每任务短生命周期容器/沙箱、低权限用户、只挂载工作区、默认禁网、CPU/内存/进程限制</td></tr>
+        <tr><td>审批</td><td><code>interrupt</code> + CLI 确认</td><td>写入/执行/删除/联网/发布前展示精确 diff 与命令；审批事件入审计日志并可回溯</td></tr>
+        <tr><td>持久化</td><td><code>InMemorySaver</code></td><td>Postgres/Redis 等持久化 checkpointer；按租户隔离、加密、备份、TTL 与数据删除</td></tr>
+        <tr><td>幂等性</td><td>工具直接执行</td><td>为外部副作用设幂等键；节点重放时避免重复发消息、重复扣费或重复发布</td></tr>
+        <tr><td>可观察性</td><td>CLI 输出 + <code>/state</code></td><td>trace_id、thread_id、节点延迟、token、费用、工具成功率、循环次数、最终验收结果</td></tr>
+        <tr><td>模型可靠性</td><td>单模型、固定超时</td><td>按错误类型重试，速率限制，预算上限，降级模型，结构化输出校验</td></tr>
+        <tr><td>上下文</td><td>保留全部消息</td><td>裁剪、摘要、检索；大文件用引用，防止仓库内容里的提示注入扩散</td></tr>
+      </tbody></table></div>
+      <h3>上线前检查清单</h3>
+      <ul class="checklist"><li>工具参数都有类型、描述、边界校验与确定的错误返回。</li><li>图有明确成功条件、失败条件、超时、最大步数与取消路径。</li><li>任何不可逆或外部副作用都有审批与幂等保护。</li><li>持久化状态不含不必要的密钥、凭据或超大数据。</li><li>真实验收基于测试、文件 diff 或结构化结果，而不是模型自称“完成”。</li><li>成本、速率、并发与日志保留均有上限。</li><li>针对仓库内恶意提示、依赖脚本与测试脚本做过威胁建模。</li></ul>
+    </section>
+
+    <section id="faq">
+      <h2>10. 常见问题</h2>
+      <details><summary>安装时报错要编译 tiktoken / ormsgpack，怎么办？</summary><p>多半是在用 32 位 Python，缺少预编译 wheel 才会尝试用 Rust 从源码构建。改用 64 位 Python 3.10+ 重新建虚拟环境即可；或安装 Rust 工具链后再构建（不推荐）。</p></details>
+      <details><summary>为什么不直接用 create_agent？</summary><p><code>create_agent</code> 是 LangChain 1.x 推荐的高层入口，也跑在 LangGraph 上。本文的目标是讲清流程控制，因此手工搭图。只需标准“模型—工具”循环时用它更省代码；需要自定义节点、审批、复杂路由或恢复时再下沉到 <code>StateGraph</code>。</p></details>
+      <details><summary>工具为什么要返回 Command 而不是字符串？</summary><p>返回字符串时 <code>ToolNode</code> 会自动包成 ToolMessage，适合只读工具。若还要更新自定义状态字段（如 <code>changed_files</code>），就返回 <code>Command(update=...)</code>，用 <code>InjectedToolCallId</code> 生成配对的 ToolMessage。</p></details>
+      <details><summary>如何换成其他外部模型？</summary><p>安装对应厂商的 LangChain 集成，替换 <code>ChatOpenAI</code> 初始化，保留 <code>bind_tools</code> 与图结构即可。必须确认模型支持工具调用，并改用该厂商的 Key 环境变量。仅当端点确实兼容官方 OpenAI 协议时才使用 <code>OPENAI_BASE_URL</code>。</p></details>
+      <details><summary>InMemorySaver 是“长期记忆”吗？</summary><p>不是。它是进程内 thread 级检查点，重启即丢。跨会话的用户记忆通常用 LangGraph Store；可恢复执行则用持久化 checkpointer，两者用途不同。</p></details>
+      <details><summary>怎样让工具执行失败后自动重试？</summary><p>先区分暂时错误与永久错误。网络超时可在节点用 RetryPolicy 或客户端有限指数退避；参数错误、权限拒绝不应盲目重试。写入与命令等有副作用的动作必须考虑重放与幂等。</p></details>
+      <h3>官方参考</h3>
+      <ul><li><a href="https://docs.langchain.com/oss/python/langgraph/overview">LangGraph 概览</a></li><li><a href="https://docs.langchain.com/oss/python/langgraph/quickstart">LangGraph Quickstart</a></li><li><a href="https://docs.langchain.com/oss/python/langgraph/persistence">持久化与检查点</a></li><li><a href="https://docs.langchain.com/oss/python/langgraph/add-human-in-the-loop">人工审批 / interrupt</a></li><li><a href="https://docs.langchain.com/oss/python/releases/langgraph-v1">LangGraph v1 变更</a></li><li><a href="https://docs.langchain.com/oss/python/integrations/chat/openai">ChatOpenAI 集成</a></li></ul>
+    </section>
+
+    <footer>本教程生成于 2026-07-20。实际模型可用性、价格与 SDK 细节会变化，上线前请再次核对官方文档。配套示例位于 <code>langgraph_cursor_agent/</code>，不包含任何真实 API Key。</footer>
+  </main>
+</div>
+<script>
+  document.querySelectorAll('.copy').forEach(btn => btn.addEventListener('click', async () => {
+    const text = btn.closest('.codebox').querySelector('code').innerText;
+    try { await navigator.clipboard.writeText(text); btn.textContent = '已复制'; }
+    catch { btn.textContent = '请手动复制'; }
+    setTimeout(() => btn.textContent = '复制', 1400);
+  }));
+  const links = [...document.querySelectorAll('aside nav a')];
+  const observer = new IntersectionObserver(entries => {
+    const visible = entries.filter(e => e.isIntersecting).sort((a,b) => a.boundingClientRect.top-b.boundingClientRect.top)[0];
+    if (!visible) return;
+    links.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + visible.target.id));
+  }, {rootMargin:'-10% 0px -75% 0px'});
+  document.querySelectorAll('main section[id]').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
